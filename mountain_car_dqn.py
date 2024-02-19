@@ -73,11 +73,11 @@ print(f'Finished training! Use {result["duration"]}')
 
 
 
-writer = SummaryWriter('log/dqn_simple_tag')
+writer = SummaryWriter('log/dqn_mountain_car')
 logger = TensorboardLogger(writer)
 
-torch.save(policy.state_dict(), 'dqn_simple_tag.pth')
-policy.load_state_dict(torch.load('dqn_simple_tag.pth'))
+torch.save(policy.state_dict(), 'dqn_mountain_car.pth')
+policy.load_state_dict(torch.load('dqn_mountain_car.pth'))
 
 policy.eval()
 policy.set_eps(0.05)

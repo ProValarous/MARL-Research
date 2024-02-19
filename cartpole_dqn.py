@@ -14,10 +14,16 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-env = gym.make("MountainCar-v0", render_mode='human')
+# train_env = simple_tag_v3.env(num_good=1, num_adversaries=3, num_obstacles=2, max_cycles=2500, continuous_actions=False, render_mode=None)
+# test_env = simple_tag_v3.env(num_good=1, num_adversaries=3, num_obstacles=2, max_cycles=2500, continuous_actions=False, render_mode="human")
 
-train_env = ts.env.DummyVectorEnv([lambda: gym.make("MountainCar-v0") for _ in range(10)])
-test_env = ts.env.DummyVectorEnv([lambda: gym.make("MountainCar-v0") for _ in range(100)])
+env = gym.make('CartPole-v1',render_mode='human')
+
+train_env = envpool.make_gymnasium("CartPole-v1", num_envs=10)
+test_env = envpool.make_gymnasium("CartPole-v1", num_envs=100)
+
+# train_env = ts.env.DummyVectorEnv([lambda: gym.make('CartPole-v0') for _ in range(10)])
+# test_env = ts.env.DummyVectorEnv([lambda: gym.make('CartPole-v0') for _ in range(100)])
 
 
 # train_env.reset(seed=42)
@@ -57,27 +63,32 @@ policy = ts.policy.DQNPolicy(
 train_collector = ts.data.Collector(policy, train_env, ts.data.VectorReplayBuffer(20000, 10), exploration_noise=True)
 test_collector = ts.data.Collector(policy, test_env, exploration_noise=True)
 
+# result = self.policy(self.data, last_state)                         # the agent predicts the batch action from batch observation
+# act = to_numpy(result.act)
+# self.data.update(act=act)                                           # update the data with new action/policy
+# result = self.env.step(act, ready_env_ids)                          # apply action to environment
+# obs_next, rew, done, info = result
+# self.data.update(obs_next=obs_next, rew=rew, done=done, info=info)  # update the data with new state/reward/done/info
+
+# result = ts.trainer.OffpolicyTrainer(
+#     policy=policy,
+#     train_collector=train_collector,
+#     test_collector=test_collector,
+#     max_epoch=10, step_per_epoch=10000, step_per_collect=10,
+#     update_per_step=0.1, episode_per_test=100, batch_size=64,
+#     train_fn=lambda epoch, env_step: policy.set_eps(0.1),
+#     test_fn=lambda epoch, env_step: policy.set_eps(0.05),
+#     stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold
+# ).run()
+# print(f'Finished training! Use {result["duration"]}')
 
 
-result = ts.trainer.OffpolicyTrainer(
-    policy=policy,
-    train_collector=train_collector,
-    test_collector=test_collector,
-    max_epoch=10, step_per_epoch=10000, step_per_collect=10,
-    update_per_step=0.1, episode_per_test=100, batch_size=64,
-    train_fn=lambda epoch, env_step: policy.set_eps(0.1),
-    test_fn=lambda epoch, env_step: policy.set_eps(0.05),
-    stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold
-).run()
-print(f'Finished training! Use {result["duration"]}')
 
-
-
-writer = SummaryWriter('log/dqn_simple_tag')
+writer = SummaryWriter('log/dqn')
 logger = TensorboardLogger(writer)
 
-torch.save(policy.state_dict(), 'dqn_simple_tag.pth')
-policy.load_state_dict(torch.load('dqn_simple_tag.pth'))
+# torch.save(policy.state_dict(), 'dqn.pth')
+policy.load_state_dict(torch.load('dqn.pth'))
 
 policy.eval()
 policy.set_eps(0.05)
