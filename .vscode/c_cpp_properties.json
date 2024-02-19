@@ -1,0 +1,39 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/opt/ros/humble/include/**",
+        "/home/provalarous/Documents/MATLAB/Examples/R2022b/robotics/PerformCoSimulationBetweenSimulinkAndGazeboExample/GazeboPlugin/include/**",
+        "/home/provalarous/Documents/MATLAB/Examples/R2023b/robotics/PerformCoSimulationBetweenSimulinkAndGazeboExample/GazeboPlugin/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/global_planner/evolutionary_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/global_planner/global_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/global_planner/graph_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/global_planner/sample_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/local_planner/apf_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/local_planner/dwa_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/local_planner/local_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/local_planner/pid_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/local_planner/static_planner/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/planner/utils/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/third_party/gazebo_plugins/pedestrian_sfm_plugin/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/third_party/gazebo_plugins/pedestrian_visualizer_plugin/gazebo_ped_visualizer_plugin/include/**",
+        "/home/provalarous/ros_motion_planning/ros_motion_planning/src/third_party/map_plugins/voronoi_layer/include/**",
+        "/home/provalarous/src/GazeboPlugin/include/**",
+        "/home/provalarous/user/GazeboPlugin/FruitPickingPkg/include/**",
+        "/home/provalarous/user/GazeboPlugin/GazeboPlugin/include/**",
+        "/home/provalarous/user/src/GazeboPlugin/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
