@@ -1,5 +1,6 @@
-import torch, numpy as np
+import torch
 from torch import nn
+import numpy as np
 
 class Net(nn.Module):
     def __init__(self, state_shape, action_shape):
@@ -17,8 +18,3 @@ class Net(nn.Module):
         batch = obs.shape[0]
         logits = self.model(obs.view(batch, -1))
         return logits, state
-
-state_shape = env.observation_space.shape or env.observation_space.n
-action_shape = env.action_space.shape or env.action_space.n
-net = Net(state_shape, action_shape)
-optim = torch.optim.Adam(net.parameters(), lr=1e-3)

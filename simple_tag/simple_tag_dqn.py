@@ -4,10 +4,9 @@ from copy import deepcopy
 from typing import Optional, Tuple
 
 import gymnasium as gym
-import envpool
 import numpy as np
 import torch
-from pettingzoo.classic import tictactoe_v3
+# from pettingzoo.classic import tictactoe_v3
 from pettingzoo.mpe import simple_tag_v3
 from torch.utils.tensorboard import SummaryWriter
 
@@ -26,6 +25,8 @@ from tianshou.trainer import offpolicy_trainer
 from tianshou.utils import TensorboardLogger
 from tianshou.utils.net.common import Net
 
+# from NN_model import Net
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -42,7 +43,7 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument('--n-step', type=int, default=3)
     parser.add_argument('--target-update-freq', type=int, default=320)
-    parser.add_argument('--epoch', type=int, default=50)
+    parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--step-per-epoch', type=int, default=1000)
     parser.add_argument('--step-per-collect', type=int, default=10)
     parser.add_argument('--update-per-step', type=float, default=0.1)
@@ -66,13 +67,6 @@ def get_parser() -> argparse.ArgumentParser:
         action='store_true',
         help='no training, '
         'watch the play of pre-trained models'
-    )
-    parser.add_argument(
-        '--agent-id',
-        type=int,
-        default=4,
-        help='the learned agent plays as the'
-        ' agent_id-th player. Choices are 1 and 2.'
     )
     parser.add_argument(
         '--resume-path',
@@ -117,8 +111,10 @@ def get_agents(
             hidden_sizes=args.hidden_sizes,
             device=args.device
         ).to(args.device)
+
         if optim is None:
             optim = torch.optim.Adam(net.parameters(), lr=args.lr)
+        
         agent_learn = DQNPolicy(
             net,
             optim,
@@ -126,26 +122,57 @@ def get_agents(
             args.n_step,
             target_update_freq=args.target_update_freq
         )
+        agent_opponent = DQNPolicy(
+            net,
+            optim,
+            args.gamma,
+            args.n_step,
+            target_update_freq=args.target_update_freq
+        )
+
         if args.resume_path:
             agent_learn.load_state_dict(torch.load(args.resume_path))
 
     if agent_opponent is None:
+        # model
+        net = Net(
+            args.state_shape,
+            args.action_shape,
+            hidden_sizes=args.hidden_sizes,
+            device=args.device
+        ).to(args.device)
+
+        if optim is None:
+            optim = torch.optim.Adam(net.parameters(), lr=args.lr)
+
         if args.opponent_path:
             agent_opponent = deepcopy(agent_learn)
             agent_opponent.load_state_dict(torch.load(args.opponent_path))
         else:
-            agent_opponent = RandomPolicy()
+            # agent_opponent = RandomPolicy()
+            net2 = Net(
+            args.state_shape,
+            args.action_shape,
+            hidden_sizes=args.hidden_sizes,
+            device=args.device
+        ).to(args.device)
+            
+            agent_opponent = DQNPolicy(
+                net2,
+                optim,
+                args.gamma,
+                args.n_step,
+                target_update_freq=args.target_update_freq
+            )
+    
+    agents = [agent_opponent, agent_learn]
 
-    if args.agent_id == 1:
-        agents = [agent_learn, agent_opponent]
-    else:
-        agents = [agent_opponent,agent_opponent,agent_opponent, agent_learn]
     policy = MultiAgentPolicyManager(agents, env)
     return policy, optim, env.agents
 
 
 def get_env(render_mode=None):
-    return PettingZooEnv(pad_observations_v0(simple_tag_v3.env(num_good=1, num_adversaries=3, num_obstacles=2, max_cycles=25, continuous_actions=False, render_mode=render_mode)))
+    return PettingZooEnv(pad_observations_v0(simple_tag_v3.env(num_good=1, num_adversaries=1, num_obstacles=1, max_cycles=250, continuous_actions=False, render_mode=render_mode)))
 
 
 def train_agent(
@@ -181,7 +208,7 @@ def train_agent(
     train_collector.collect(n_step=args.batch_size * args.training_num)
 
     # ======== tensorboard logging setup =========
-    log_path = os.path.join(args.logdir, 'tic_tac_toe', 'dqn')
+    log_path = os.path.join(args.logdir, 'simple_tag_dqn', 'dqn')
     writer = SummaryWriter(log_path)
     writer.add_text("args", str(args))
     logger = TensorboardLogger(writer)
@@ -192,23 +219,23 @@ def train_agent(
             model_save_path = args.model_save_path
         else:
             model_save_path = os.path.join(
-                args.logdir, 'tic_tac_toe', 'dqn', 'policy.pth'
+                args.logdir, 'simple_tag_dqn', 'dqn', 'policy.pth'
             )
         torch.save(
-            policy.policies[agents[args.agent_id - 1]].state_dict(), model_save_path
+            policy.policies[agents[2 - 1]].state_dict(), model_save_path
         )
 
     def stop_fn(mean_rewards):
         return mean_rewards >= args.win_rate
 
     def train_fn(epoch, env_step):
-        policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_train)
+        policy.policies[agents[2 - 1]].set_eps(args.eps_train)
 
     def test_fn(epoch, env_step):
-        policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
+        policy.policies[agents[2 - 1]].set_eps(args.eps_test)
 
     def reward_metric(rews):
-        return rews[:, args.agent_id - 1]
+        return rews[:, 2 - 1]
 
     # trainer
     result = offpolicy_trainer(
@@ -230,7 +257,7 @@ def train_agent(
         reward_metric=reward_metric
     )
 
-    return result, policy.policies[agents[args.agent_id - 1]]
+    return result, policy.policies[agents[2- 1]]
 
 # ======== a test function that tests a pre-trained agent ======
 def watch(
@@ -244,11 +271,11 @@ def watch(
         args, agent_learn=agent_learn, agent_opponent=agent_opponent
     )
     policy.eval()
-    policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
+    policy.policies[agents[2 - 1]].set_eps(args.eps_test)
     collector = Collector(policy, env, exploration_noise=True)
     result = collector.collect(n_episode=1, render=args.render)
     rews, lens = result["rews"], result["lens"]
-    print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
+    print(f"Final reward: {rews[:, 2 - 1].mean()}, length: {lens.mean()}")
 
 # train the agent and watch its performance in a match!
 args = get_args()

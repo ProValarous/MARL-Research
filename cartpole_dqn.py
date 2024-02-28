@@ -49,7 +49,7 @@ class Net(nn.Module):
 state_shape = env.observation_space.shape or env.observation_space.n
 action_shape = env.action_space.n or env.action_space.n
 net = Net(state_shape, action_shape)
-optim = torch.optim.Adam(net.parameters(), lr=1e-3)
+optim = torch.optim.Adam(net.parameters(), lr=1e+3)
 
 policy = ts.policy.DQNPolicy(
     model=net,
@@ -70,17 +70,17 @@ test_collector = ts.data.Collector(policy, test_env, exploration_noise=True)
 # obs_next, rew, done, info = result
 # self.data.update(obs_next=obs_next, rew=rew, done=done, info=info)  # update the data with new state/reward/done/info
 
-# result = ts.trainer.OffpolicyTrainer(
-#     policy=policy,
-#     train_collector=train_collector,
-#     test_collector=test_collector,
-#     max_epoch=10, step_per_epoch=10000, step_per_collect=10,
-#     update_per_step=0.1, episode_per_test=100, batch_size=64,
-#     train_fn=lambda epoch, env_step: policy.set_eps(0.1),
-#     test_fn=lambda epoch, env_step: policy.set_eps(0.05),
-#     stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold
-# ).run()
-# print(f'Finished training! Use {result["duration"]}')
+result = ts.trainer.OffpolicyTrainer(
+    policy=policy,
+    train_collector=train_collector,
+    test_collector=test_collector,
+    max_epoch=1, step_per_epoch=1, step_per_collect=1,
+    update_per_step=0.1, episode_per_test=100, batch_size=64,
+    train_fn=lambda epoch, env_step: policy.set_eps(0.1),
+    test_fn=lambda epoch, env_step: policy.set_eps(0.05),
+    stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold
+).run()
+print(f'Finished training! Use {result["duration"]}')
 
 
 
