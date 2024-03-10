@@ -16,8 +16,8 @@ warnings.filterwarnings('ignore')
 
 env = gym.make("MountainCar-v0", render_mode='human')
 
-train_env = ts.env.DummyVectorEnv([lambda: gym.make("MountainCar-v0") for _ in range(10)])
-test_env = ts.env.DummyVectorEnv([lambda: gym.make("MountainCar-v0") for _ in range(100)])
+train_env = ts.env.DummyVectorEnv([lambda: gym.make("MountainCar-v0") for _ in range(100)])
+test_env = ts.env.DummyVectorEnv([lambda: gym.make("MountainCar-v0") for _ in range(10)])
 
 
 # train_env.reset(seed=42)
@@ -45,6 +45,8 @@ action_shape = env.action_space.n or env.action_space.n
 net = Net(state_shape, action_shape)
 optim = torch.optim.Adam(net.parameters(), lr=1e-3)
 
+
+
 policy = ts.policy.DQNPolicy(
     model=net,
     optim=optim,
@@ -54,29 +56,29 @@ policy = ts.policy.DQNPolicy(
     target_update_freq=320
 )
 
-train_collector = ts.data.Collector(policy, train_env, ts.data.VectorReplayBuffer(20000, 10), exploration_noise=True)
+train_collector = ts.data.Collector(policy, train_env, ts.data.VectorReplayBuffer(20000, 100), exploration_noise=True)
 test_collector = ts.data.Collector(policy, test_env, exploration_noise=True)
 
 
 
-result = ts.trainer.OffpolicyTrainer(
-    policy=policy,
-    train_collector=train_collector,
-    test_collector=test_collector,
-    max_epoch=10, step_per_epoch=10000, step_per_collect=10,
-    update_per_step=0.1, episode_per_test=100, batch_size=64,
-    train_fn=lambda epoch, env_step: policy.set_eps(0.1),
-    test_fn=lambda epoch, env_step: policy.set_eps(0.05),
-    stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold
-).run()
-print(f'Finished training! Use {result["duration"]}')
+# result = ts.trainer.OffpolicyTrainer(
+#     policy=policy,
+#     train_collector=train_collector,
+#     test_collector=test_collector,
+#     max_epoch=10, step_per_epoch=10, step_per_collect=10,
+#     update_per_step=0.1, episode_per_test=100, batch_size=64,
+#     train_fn=lambda epoch, env_step: policy.set_eps(0.1),
+#     test_fn=lambda epoch, env_step: policy.set_eps(0.05),
+#     stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold
+# ).run()
+# print(f'Finished training! Use {result["duration"]}')
 
 
 
 writer = SummaryWriter('log/dqn_mountain_car')
 logger = TensorboardLogger(writer)
 
-torch.save(policy.state_dict(), 'dqn_mountain_car.pth')
+# torch.save(policy.state_dict(), 'dqn_mountain_car.pth')
 policy.load_state_dict(torch.load('dqn_mountain_car.pth'))
 
 policy.eval()
