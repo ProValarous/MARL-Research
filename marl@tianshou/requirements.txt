@@ -1,0 +1,5 @@
+gymnasium
+pettingzoo
+pettingzoo[mpe]
+torch
+numpy==1.23.4
